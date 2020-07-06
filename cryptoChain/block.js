@@ -8,9 +8,6 @@ module.exports = class Block {
     this.lastHash = lastHash;
   }
 
-  static lightningChain(data) {
-    return `${data}*`;
-  }
   static genesis() {
     return new this(GENESIS_DATA);
   }
