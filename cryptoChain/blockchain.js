@@ -11,17 +11,18 @@ class Blockchain {
       return false;
     const len = chain.length;
     for (let i = 1; i < len; i++) {
-      const { timeStamp, data, hash, lastHash } = chain[i];
+      const { timeStamp, data, hash, lastHash, nonce, difficulty } = chain[i];
       const prevHash = chain[i - 1].hash;
       if (prevHash !== lastHash) return false;
-      if (hash !== cryptoHash(timeStamp, lastHash, data)) return false;
+      if (hash !== cryptoHash(timeStamp, lastHash, nonce, difficulty, data))
+        return false;
     }
     return true;
   }
 
   addBlock(options) {
-    const lastHash = this.chain[this.chain.length - 1].hash;
-    const block = Block.mineBlock({ lastHash, minedData: options.data });
+    const parentBlock = this.chain[this.chain.length - 1];
+    const block = Block.mineBlock({ parentBlock, minedData: options.data });
     this.chain.push(block);
   }
 
