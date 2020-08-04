@@ -58,4 +58,74 @@ describe('Transaction', () => {
       ).toBeTruthy();
     });
   });
+
+  describe('validTrasaction()', () => {
+    let errorMock;
+    beforeEach(() => {
+      errorMock = jest.fn();
+
+      global.console.error = errorMock;
+    });
+    describe('when transaction is valid', () => {
+      it('returns true', () => {
+        expect(Transaction.validTransaction({ transaction })).toBe(true);
+      });
+    });
+    describe('when transaction is invalid', () => {
+      describe('and a transaction outputMap is invalid', () => {
+        it('returns false and logs error', () => {
+          transaction.outputMap[senderWallet.publicKey] = 99999;
+          expect(Transaction.validTransaction({ transaction })).toBe(false);
+          expect(errorMock).toHaveBeenCalled();
+        });
+      });
+      describe('and a transaction input signature is invalid', () => {
+        it('returns false and log error', () => {
+          transaction.input.signature = new Wallet().sign('fakedata');
+          expect(Transaction.validTransaction({ transaction })).toBe(false);
+          expect(errorMock).toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('update()', () => {
+      let originalSignature,
+        originalSenderWalletBalance,
+        nextRecipient,
+        nextAmount;
+      beforeEach(() => {
+        originalSignature = transaction.input.signature;
+        originalSenderWalletBalance =
+          transaction.outputMap[senderWallet.publicKey];
+        nextRecipient = 'next-recipien';
+        nextAmount = 50;
+        console.log('before: ', transaction.outputMap);
+        transaction.update({
+          senderWallet,
+          recipient: nextRecipient,
+          amount: nextAmount,
+        });
+
+        console.log('after: ', transaction.outputMap);
+      });
+      // it('outputs the amount to next recipient', () => {
+      //   expect(transaction.outputMap[nextRecipient]).toEqual(nextAmount);
+      // });
+      // it('subtracts the amount from original senderWallet balance', () => {
+      //   expect(transaction.outputMap[senderWallet.publicKey]).toEqual(
+      //     originalSenderWalletBalance - nextAmount,
+      //   );
+      // });
+      // it('maintains a total output amount that matches the input amount', () => {
+      //   expect(
+      //     Object.values(transaction.outputMap).reduce(
+      //       (runningTotal, currentAmout) => runningTotal + currentAmout,
+      //     ),
+      //   ).toEqual(transaction.input.amount);
+      // });
+      it('re-signs the transaction', () => {
+        expect(transaction.input.signature).not.toEqual(originalSignature);
+      });
+    });
+  });
 });
